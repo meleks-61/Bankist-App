@@ -235,13 +235,16 @@ const containerMov = document.querySelector(".movements");
 const balanceEl =document.querySelector(".balance__value")
 const summaryIn =document.querySelector(".summary__value--in")
 const summaryOut =document.querySelector(".summary__value--out")
-
+const summaryInt = document.querySelector(".summary__value--interest")
+const transferTo=document.querySelector(".form__input--to")
+const transferAmn=document.querySelector(".form__input--amount")
+const transferBtn =document.querySelector(".form__btn--transfer")
 //Functions
 
 //displayMovements
-const displayMovements = (movements) => {
+const displayMovements = (acc) => {
   containerMov.innerHTML = "";
-  movements.forEach(function(mov, i) {
+  acc.movements.forEach(function(mov, i) {
     console.log(mov)
     
     const typee = mov > 0 ? "deposit" : "withdrawal";
@@ -273,21 +276,46 @@ const createUserName = (accs) => {
 
 //calcPrintBalance
 
-const calcPrintBalance = (movements)=>{
-  const balance = movements.reduce((acc,mov)=>  acc+mov,0)
-  balanceEl.textContent=`${balance}€`
+const calcPrintBalance = (acc)=>{
+  acc.balance = acc.movements.reduce((acc,mov)=>  acc+mov,0)
+  // const balance = acc.movements.reduce((acc,mov)=>  acc+mov,0)
+  balanceEl.textContent=`${acc.balance}€`
+  // acc.balance=balance
 
 }
 //calcPrintSummary
-const calcPrintSummary =(movements)=>{
-  const incomes=movements.filter(mov => mov>0).reduce((acc,mov)=> acc+mov,0)
+const calcPrintSummary =(acc)=>{
+  const incomes=acc.movements.filter(mov => mov>0).reduce((acc,mov)=> acc+mov,0)
   summaryIn.textContent= `${incomes}€`
 
-  const outcomes=Math.abs(movements.filter(mov => mov<0).reduce((acc,mov)=> acc+mov,0))
+  const outcomes=Math.abs(acc.movements.filter(mov => mov<0).reduce((acc,mov)=> acc+mov,0))
   summaryOut.textContent= `${outcomes}€`
+  
+  const interest= acc.movements.filter(mov=>mov>0)
+  .map(mov=>(mov*acc.interestRate)/100)
+  .filter(mov=>mov>1)
+  .reduce((acc,cur)=>acc+cur,0)
+  summaryInt.textContent=`${interest}€`
+
 
 
 }
+//updatedUI
+const updatedUI= (acc)=>{
+   //display movements
+   displayMovements(acc);
+
+   //display balance
+   calcPrintBalance(acc)
+
+   //display summary
+   calcPrintSummary(acc)
+
+}
+
+
+
+
 
 
 createUserName(accounts);
@@ -308,13 +336,34 @@ loginEl.addEventListener("click", (e) => {
     messageEl.textContent = ` Welcome back, ${currentAcc.owner.split(" ")[0]}`;
     // console.log(messageEl.textContent)
 
-    //display movements
-    displayMovements(currentAcc.movements);
+    //clear input fields
+    userInputEl.value=pınInputEl.value=""
+    pınInputEl.blur()
+    //display movements,display balance,display summary
+    updatedUI(currentAcc)
 
-    //display balance
-    calcPrintBalance(currentAcc.movements)
-
-    //display summary
-    calcPrintSummary(currentAcc.movements)
+   
   }
 });
+
+//ımplementing Transfer
+transferBtn.addEventListener("click",(e)=>{
+  e.preventDefault()
+  const receiverAcc =accounts.find(acc=> acc.userName===transferTo.value)
+  // console.log(receiverAcc)
+  const amount =Number(transferAmn.value)
+  transferTo.value =transferAmn.value="" 
+  if(amount>0&& 
+    amount<=currentAcc.balance&&
+    receiverAcc&&
+    receiverAcc?.userName!==currentAcc.userName 
+     ){
+      //transfer
+      currentAcc.movements.push(-amount)
+      receiverAcc.movements.push(amount)
+      updatedUI(currentAcc)
+
+  }
+
+})
+
