@@ -239,12 +239,21 @@ const summaryInt = document.querySelector(".summary__value--interest")
 const transferTo=document.querySelector(".form__input--to")
 const transferAmn=document.querySelector(".form__input--amount")
 const transferBtn =document.querySelector(".form__btn--transfer")
+const closeBtn = document.querySelector(".form__btn--close")
+const pınClose = document.querySelector(".form__input--pin")
+const closeInp= document.querySelector(".form__input--user")
+const loanInp = document.querySelector(".form__input--loan-amount")
+const btnLoan = document.querySelector(".form__btn--loan")
+const btnSort= document.querySelector(".btn--sort")
+
+
 //Functions
 
 //displayMovements
-const displayMovements = (acc) => {
+const displayMovements = (acc,sort=false) => {
   containerMov.innerHTML = "";
-  acc.movements.forEach(function(mov, i) {
+  const movs=sort ? acc.movements.slice().sort((a,b)=>a-b) :acc.movements
+  movs.forEach(function(mov, i) {
     console.log(mov)
     
     const typee = mov > 0 ? "deposit" : "withdrawal";
@@ -252,7 +261,7 @@ const displayMovements = (acc) => {
     const html = `<div class="movements__row">
 <div class="movements__type movements__type--${typee}">${i + 1}${typee}</div>
 <div class="movements__date">3 days ago</div>
-<div class="movements__value">${mov}</div>
+<div class="movements__value">${mov}€</div>
 </div>
 `;
 console.log(html)
@@ -336,6 +345,8 @@ loginEl.addEventListener("click", (e) => {
     messageEl.textContent = ` Welcome back, ${currentAcc.owner.split(" ")[0]}`;
     // console.log(messageEl.textContent)
 
+    document.querySelector(".app").style.opacity=1
+
     //clear input fields
     userInputEl.value=pınInputEl.value=""
     pınInputEl.blur()
@@ -366,4 +377,45 @@ transferBtn.addEventListener("click",(e)=>{
   }
 
 })
+//Close account
+closeBtn.addEventListener("click", (e)=>{
+  e.preventDefault()
+  if(closeInp.value===currentAcc.userName &&closeInp.value && pınClose.value&& Number(pınClose.value)===currentAcc.pin ){
+    const index=accounts.findIndex(acc=>acc.userName===closeInp.value)
+    //delete currentAcc
+    accounts.splice(index,1)
+    console.log(accounts)
+    document.querySelector(".app").style.opacity=0
+    messageEl.textContent="Log in to get started"
+  }
+  closeInp.value = pınClose.value=""
+  
+
+})
+
+//Loan Stuff
+btnLoan.addEventListener("click",(e)=>{
+  e.preventDefault()
+  const amount= Number(loanInp.value)
+  if(amount && currentAcc.movements.some(mov =>mov>=amount*0.1)
+    ){
+
+      currentAcc.movements.push(amount)
+      updatedUI(currentAcc)
+      loanInp.value=""
+
+
+    }
+
+})
+
+// Descending Sort  event
+let sorted=false
+btnSort.addEventListener("click",(e)=>{
+  displayMovements(currentAcc,!sorted)
+  sorted=!sorted
+
+
+})
+
 
